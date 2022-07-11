@@ -6,6 +6,8 @@ const free = document.getElementById('free');
 const busy = document.getElementById('busy');
 const callStatus = document.getElementById('status');
 const remoteVideo = document.querySelector('#busy .remoteVideo');
+const ring = document.getElementById("ring");
+const onRing = document.getElementById('onRing');
 const userId = localStorage.getItem('phone');
 
 const SIGNAL = {
@@ -49,7 +51,7 @@ function init() {
     });
     conn.on('open', () => {
       connected = true;
-      connections[conn.peer] = conn;
+      connections[conn.peer] = {conn};
       conn.send('hello!');
     });
   });
@@ -67,7 +69,7 @@ function call() {
   let connected = false;
   conn.on('open', () => {
     connected = true;
-    connections[conn.peer] = conn;
+    connections[conn.peer] = {conn};
     conn.send('hi!');
     callStatus.innerHTML = SIGNAL.DIALLING;
     navigator.mediaDevices
@@ -99,20 +101,42 @@ function call() {
 
 function incomingCall(call) {
   // Some action for answer
-  const isPicked = confirm(`${call.peer} is calling`);
-  if (isPicked) {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-    .then(stream => {
-      call.answer(stream); // Answer the call with an A/V stream.
-      call.on('stream', function (remoteStream) {
-        free.style.display = 'none';
-        busy.style.display = 'block';
-        callStatus.innerHTML = SIGNAL.TALKING;
-        remoteVideo.srcObject = remoteStream;
-        // Show stream in some video/canvas element.
-      });
-    }).catch(err => console.log('Failed to get local stream', err))
-  } else {
-    connections[call.peer].send(SIGNAL.REJECTED);
-  }
+  free.style.display = 'none';
+  busy.style.display = 'block';
+  callStatus.innerHTML = SIGNAL.RINGING;
+  connections[call.peer].call = call;
+  ring.play();
+  ringAction(call.peer)
+}
+
+
+function ringAction(fromId) {
+  onRing.innerHTML = `
+  <p> ${fromId} is calling </p>
+  <button onclick="callPicked('${fromId}')">OK</button>    <button class="danger" onclick="callReject('${fromId}')">Cancel</button>
+  `;
+  onRing.style.display = 'block';
+}
+
+function callPicked(fromId) {
+  onRing.style.display = 'none';
+  ring.pause();
+  const call = connections[fromId].call;
+  navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+  .then(stream => {
+    call.answer(stream); // Answer the call with an A/V stream.
+    call.on('stream', function (remoteStream) {
+
+      callStatus.innerHTML = SIGNAL.TALKING;
+      remoteVideo.srcObject = remoteStream;
+      // Show stream in some video/canvas element.
+    });
+  }).catch(err => console.log('Failed to get local stream', err))
+}
+
+
+function callReject(fromId) {
+  onRing.style.display = 'none';
+  ring.pause();
+  connections[fromId].conn.send(SIGNAL.REJECTED);
 }
