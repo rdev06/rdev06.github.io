@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vcall</title>
+    <style>
+      .danger {
+        color: red;
+      }
+      .hide {
+        display: none;
+      }
+    </style>
+    <script src="https://unpkg.com/peerjs@1.4.5/dist/peerjs.min.js"></script>
+    <!-- <script src="peerjs.min.js"></script> -->
+  </head>
+  <body>
+    <form onsubmit="return register()" id="registerForm">
+      <input type="tel" id="phone" required />
+      <input type="submit" value="Register" />
+    </form>
+
+    <div id="loggedIn">
+      <button class="danger" onclick="localStorage.clear();location.reload()">LogOut</button> <br /><br />
+      <div id="ready" class="hide">
+        <form onsubmit="return call()" id="free">
+          To: <input type="tel" id="toPhone" required /> <br />
+          withVideo: <input type="checkbox" id="withVideo">
+          <input type="submit" value="call" />
+        </form>
+
+        <div class="hide" id="busy">
+          <video class="remoteVideo" autoplay></video> <br />
+          <strong>Status : </strong><span id="status">Initiating</span> <br />
+          <button onclick="location.reload()" class="danger">END</button>
+        </div>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
